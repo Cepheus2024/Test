@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users - Quiz Master{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+            <div class="position-sticky pt-3">
+                <h6 class="sidebar-heading px-3 mt-2 mb-1 text-muted">
+                    <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+                </h6>
+                <ul class="nav flex-column mb-2">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                            <i class="fas fa-home me-2"></i>
+                            Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.subjects') }}">
+                            <i class="fas fa-book me-2"></i>
+                            Subjects
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin.users') }}">
+                            <i class="fas fa-users me-2"></i>
+                            Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.reports') }}">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Reports
+                        </a>
+                    </li>
+                </ul>
+                
+                <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+                    <i class="fas fa-tools me-2"></i>Tools
+                </h6>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.export_users_csv') }}">
+                            <i class="fas fa-file-csv me-2"></i>
+                            Export Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.export_quizzes_csv') }}">
+                            <i class="fas fa-file-export me-2"></i>
+                            Export Quizzes
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Manage Users</h1>
+                <div class="d-flex">
+                    <form id="adminSearchForm" class="input-group me-2" method="POST" action="{{ url_for('admin.search') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="text" class="form-control" placeholder="Search users..." id="adminSearch" name="q">
+                        <button class="btn btn-outline-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                    <a href="{{ url_for('admin.export_users_csv') }}" class="btn btn-primary">
+                        <i class="fas fa-file-export me-1"></i> Export Users
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Users Table -->
+            <div class="card bg-dark border-secondary shadow-sm mb-4">
+                <div class="card-header bg-dark border-secondary">
+                    <h5 class="mb-0">Registered Users</h5>
+                </div>
+                <div class="card-body">
+                    {% if users %}
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover" id="usersTable">
+                                <thead>
+                                    <tr>
+                                        <th width="5%">#</th>
+                                        <th width="15%">Username</th>
+                                        <th width="20%">Full Name</th>
+                                        <th width="20%">Email</th>
+                                        <th width="15%">Joined On</th>
+                                        <th width="15%">Last Login</th>
+                                        <th width="10%">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                        <tr>
+                                            <td>{{ user.id }}</td>
+                                            <td>{{ user.username }}</td>
+                                            <td>{{ user.fullname }}</td>
+                                            <td>{{ user.email }}</td>
+                                            <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                                            <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'Never' }}</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <button type="button" class="btn btn-outline-info view-user-btn" 
+                                                        data-id="{{ user.id }}"
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#viewUserModal"
+                                                        data-username="{{ user.username }}"
+                                                        data-fullname="{{ user.fullname }}"
+                                                        data-email="{{ user.email }}"
+                                                        data-qualification="{{ user.qualification or 'Not specified' }}"
+                                                        data-dob="{{ user.dob.strftime('%Y-%m-%d') if user.dob else 'Not specified' }}"
+                                                        data-joined="{{ user.created_at.strftime('%Y-%m-%d') }}"
+                                                        data-last-login="{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'Never' }}"
+                                                        title="View User">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <a href="{{ url_for('admin.delete_user', id=user.id) }}" class="btn btn-outline-danger delete-user-btn" 
+                                                       title="Delete User" onclick="return confirm('Are you sure you want to delete this user? This will delete all their quiz attempts.')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="fas fa-users fa-4x text-muted"></i>
+                            </div>
+                            <h5>No users have registered yet</h5>
+                            <p class="text-muted">Users will appear here once they register.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View User Modal -->
+<div class="modal fade" id="viewUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark">
+            <div class="modal-header">
+                <h5 class="modal-title">User Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-3 text-muted">Username:</div>
+                    <div class="col-md-9" id="viewUsername"></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 text-muted">Full Name:</div>
+                    <div class="col-md-9" id="viewFullname"></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 text-muted">Email:</div>
+                    <div class="col-md-9" id="viewEmail"></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 text-muted">Qualification:</div>
+                    <div class="col-md-9" id="viewQualification"></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 text-muted">Date of Birth:</div>
+                    <div class="col-md-9" id="viewDob"></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 text-muted">Joined On:</div>
+                    <div class="col-md-9" id="viewJoined"></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 text-muted">Last Login:</div>
+                    <div class="col-md-9" id="viewLastLogin"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-danger" id="viewDeleteBtn">Delete User</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // User view modal functionality
+        const viewButtons = document.querySelectorAll('.view-user-btn');
+        
+        viewButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const username = this.getAttribute('data-username');
+                const fullname = this.getAttribute('data-fullname');
+                const email = this.getAttribute('data-email');
+                const qualification = this.getAttribute('data-qualification');
+                const dob = this.getAttribute('data-dob');
+                const joined = this.getAttribute('data-joined');
+                const lastLogin = this.getAttribute('data-last-login');
+                
+                // Populate the modal fields
+                document.getElementById('viewUsername').textContent = username;
+                document.getElementById('viewFullname').textContent = fullname;
+                document.getElementById('viewEmail').textContent = email;
+                document.getElementById('viewQualification').textContent = qualification;
+                document.getElementById('viewDob').textContent = dob;
+                document.getElementById('viewJoined').textContent = joined;
+                document.getElementById('viewLastLogin').textContent = lastLogin;
+                
+                // Update delete button URL
+                document.getElementById('viewDeleteBtn').href = "{{ url_for('admin.delete_user', id=0) }}".replace('0', id);
+            });
+        });
+        
+        // Delete user confirmation
+        const deleteButtons = document.querySelectorAll('.delete-user-btn');
+        const viewDeleteBtn = document.getElementById('viewDeleteBtn');
+        
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to delete this user? This will delete all their quiz attempts.')) {
+                    e.preventDefault();
+                }
+            });
+        });
+        
+        if (viewDeleteBtn) {
+            viewDeleteBtn.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to delete this user? This will delete all their quiz attempts.')) {
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

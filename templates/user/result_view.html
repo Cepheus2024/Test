@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Results - {{ quiz.title }} - Quiz Master{% endblock %}
+
+{% block head %}
+<style>
+    .result-header {
+        background-color: rgba(0, 0, 0, 0.7)  !important;
+        border-radius: 0.25rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .question-container {
+        border: 1px solid var(--bs-secondary) ;
+        border-radius: 0.25rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background-color: rgba(30, 30, 30, 0.5);
+    }
+    .correct-answer {
+        background-color: rgba(25, 135, 84, 0.1);
+        border-color: var(--bs-success);
+    }
+    .wrong-answer {
+        background-color: rgba(220, 53, 69, 0.1);
+        border-color: var(--bs-danger);
+    }
+    .answer-label {
+        padding: 0.75rem 1rem;
+        border-radius: 0.25rem;
+        display: block;
+        border: 1px solid var(--bs-secondary);
+        margin-bottom: 0.5rem;
+    }
+    .option-selected {
+        border-width: 2px;
+    }
+    .correct-option {
+        background-color: rgba(25, 135, 84, 0.1);
+        border-color: var(--bs-success);
+    }
+    .incorrect-option {
+        background-color: rgba(220, 53, 69, 0.1);
+        border-color: var(--bs-danger);
+    }
+    .neutral-option {
+        opacity: 0.7;
+    }
+    .ranking-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .current-user-rank {
+        background-color: rgba(13, 202, 240, 0.1);
+        border: 1px solid var(--bs-info);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('user.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('user.subjects') }}">Subjects</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('user.chapters', subject_id=subject.id) }}">{{ subject.name }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('user.quizzes', chapter_id=chapter.id) }}">{{ chapter.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Results</li>
+        </ol>
+    </nav>
+
+    <!-- Result Summary -->
+    <div class="result-header shadow">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="mb-3">{{ quiz.title }} - Results</h2>
+                <div class="d-flex flex-wrap gap-4 mb-3">
+                    <div>
+                        <span class="text-muted">Score:</span>
+                        <h4 class="d-inline-block ms-2">{{ score.total_scored }} ({{ "%.2f"|format(percentage) }}%)</h4>
+                    </div>
+                    <div>
+                        <span class="text-muted">Correct Answers:</span>
+                        <h4 class="d-inline-block ms-2">{{ score.correct_answers }}/{{ score.total_questions }}</h4>
+                    </div>
+                    <div>
+                        <span class="text-muted">Time Taken:</span>
+                        <h4 class="d-inline-block ms-2">
+                            {% set minutes = (score.time_taken // 60) %}
+                            {% set seconds = (score.time_taken % 60) %}
+                            {{ minutes }}m {{ seconds }}s
+                        </h4>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <span class="text-muted">Attempted on:</span>
+                    <span class="ms-2">{{ score.time_stamp_of_attempt.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+                {% if percentage >= 80 %}
+                    <div class="display-1 text-success"><i class="fas fa-trophy"></i></div>
+                    <h4 class="text-success">Excellent!</h4>
+                {% elif percentage >= 60 %}
+                    <div class="display-1 text-info"><i class="fas fa-award"></i></div>
+                    <h4 class="text-info">Good Job!</h4>
+                {% elif percentage >= 40 %}
+                    <div class="display-1 text-warning"><i class="fas fa-star-half-alt"></i></div>
+                    <h4 class="text-warning">Keep Practicing!</h4>
+                {% else %}
+                    <div class="display-1 text-danger"><i class="fas fa-exclamation-circle"></i></div>
+                    <h4 class="text-danger">Need Improvement!</h4>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Detailed Results -->
+        <div class="col-lg-8 mb-4">
+            <div class="card bg-dark border-secondary shadow-sm h-100">
+                <div class="card-header bg-dark border-secondary">
+                    <h5 class="mb-0">Detailed Analysis</h5>
+                </div>
+                <div class="card-body">
+                    {% for question, detail in question_details %}
+                        <div class="question-container {% if detail.is_correct %}correct-answer{% else %}wrong-answer{% endif %}">
+                            <h5 class="mb-3">
+                                <span class="badge {% if detail.is_correct %}bg-success{% else %}bg-danger{% endif %} me-2">{{ loop.index }}</span>
+                                {{ question.question_statement }}
+                            </h5>
+                            
+                            <div class="options-container">
+                                <div class="mb-2">
+                                    <div class="answer-label {% if detail.selected_option == 1 %}option-selected {% endif %}{% if question.correct_option == 1 %}correct-option{% elif detail.selected_option == 1 %}incorrect-option{% else %}neutral-option{% endif %}">
+                                        <span class="option-letter fw-bold me-2">A.</span>
+                                        {{ question.option1 }}
+                                        {% if question.correct_option == 1 %}
+                                            <span class="float-end text-success"><i class="fas fa-check-circle"></i></span>
+                                        {% elif detail.selected_option == 1 %}
+                                            <span class="float-end text-danger"><i class="fas fa-times-circle"></i></span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-2">
+                                    <div class="answer-label {% if detail.selected_option == 2 %}option-selected {% endif %}{% if question.correct_option == 2 %}correct-option{% elif detail.selected_option == 2 %}incorrect-option{% else %}neutral-option{% endif %}">
+                                        <span class="option-letter fw-bold me-2">B.</span>
+                                        {{ question.option2 }}
+                                        {% if question.correct_option == 2 %}
+                                            <span class="float-end text-success"><i class="fas fa-check-circle"></i></span>
+                                        {% elif detail.selected_option == 2 %}
+                                            <span class="float-end text-danger"><i class="fas fa-times-circle"></i></span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-2">
+                                    <div class="answer-label {% if detail.selected_option == 3 %}option-selected {% endif %}{% if question.correct_option == 3 %}correct-option{% elif detail.selected_option == 3 %}incorrect-option{% else %}neutral-option{% endif %}">
+                                        <span class="option-letter fw-bold me-2">C.</span>
+                                        {{ question.option3 }}
+                                        {% if question.correct_option == 3 %}
+                                            <span class="float-end text-success"><i class="fas fa-check-circle"></i></span>
+                                        {% elif detail.selected_option == 3 %}
+                                            <span class="float-end text-danger"><i class="fas fa-times-circle"></i></span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-2">
+                                    <div class="answer-label {% if detail.selected_option == 4 %}option-selected {% endif %}{% if question.correct_option == 4 %}correct-option{% elif detail.selected_option == 4 %}incorrect-option{% else %}neutral-option{% endif %}">
+                                        <span class="option-letter fw-bold me-2">D.</span>
+                                        {{ question.option4 }}
+                                        {% if question.correct_option == 4 %}
+                                            <span class="float-end text-success"><i class="fas fa-check-circle"></i></span>
+                                        {% elif detail.selected_option == 4 %}
+                                            <span class="float-end text-danger"><i class="fas fa-times-circle"></i></span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if not detail.is_correct %}
+                                <div class="alert alert-secondary mt-3 mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Correct Answer:</strong> 
+                                    Option 
+                                    {% if question.correct_option == 1 %}A{% elif question.correct_option == 2 %}B{% elif question.correct_option == 3 %}C{% else %}D{% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ranking and Stats -->
+        <div class="col-lg-4 mb-4">
+            <div class="card bg-dark border-secondary shadow-sm mb-4">
+                <div class="card-header bg-dark border-secondary">
+                    <h5 class="mb-0">Your Ranking</h5>
+                </div>
+                <div class="card-body">
+                    {% if ranking %}
+                        <div class="ranking-list">
+                            <table class="table table-dark table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>User</th>
+                                        <th>Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for rank in ranking %}
+                                        <tr {% if rank.current_user %}class="current-user-rank"{% endif %}>
+                                            <td>{{ rank.rank }}</td>
+                                            <td>
+                                                {{ rank.username }}
+                                                {% if rank.current_user %}<span class="badge bg-info ms-1">You</span>{% endif %}
+                                            </td>
+                                            <td>{{ rank.score }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-center text-muted">No ranking information available.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card bg-dark border-secondary shadow-sm">
+                <div class="card-header bg-dark border-secondary">
+                    <h5 class="mb-0">Performance Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6>Score Distribution</h6>
+                        <div class="progress bg-secondary">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ score.correct_answers / score.total_questions * 100 }}%" 
+                                 aria-valuenow="{{ score.correct_answers }}" aria-valuemin="0" aria-valuemax="{{ score.total_questions }}">
+                                {{ score.correct_answers }}
+                            </div>
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: {{ (score.total_questions - score.correct_answers) / score.total_questions * 100 }}%" 
+                                 aria-valuenow="{{ score.total_questions - score.correct_answers }}" aria-valuemin="0" aria-valuemax="{{ score.total_questions }}">
+                                {{ score.total_questions - score.correct_answers }}
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                            <small class="text-success">Correct: {{ score.correct_answers }}</small>
+                            <small class="text-danger">Wrong: {{ score.total_questions - score.correct_answers }}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>Time Utilization</h6>
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="text-muted" style="width: 140px;">Available Time:</div>
+                            <div>{{ quiz.time_duration }} minutes</div>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="text-muted" style="width: 140px;">Time Taken:</div>
+                            <div>
+                                {% set minutes = (score.time_taken // 60) %}
+                                {% set seconds = (score.time_taken % 60) %}
+                                {{ minutes }} minutes {{ seconds }} seconds
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="text-muted" style="width: 140px;">Time per Question:</div>
+                            <div>
+                                {% set avg_seconds = score.time_taken // score.total_questions %}
+                                {{ avg_seconds // 60 }} minutes {{ avg_seconds % 60 }} seconds
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        <a href="{{ url_for('user.quizzes', chapter_id=chapter.id) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-1"></i> Back to Quizzes
+                        </a>
+                        <a href="{{ url_for('user.dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-1"></i> Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

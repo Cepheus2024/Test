@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Attempt Quiz - {{ quiz.title }} - Quiz Master{% endblock %}
+
+{% block head %}
+<style>
+    .question-container {
+        border: 1px solid var(--bs-secondary);
+        border-radius: 0.25rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background-color: rgba(30, 30, 30, 0.5);
+    }
+    .option-label {
+        cursor: pointer;
+        padding: 0.75rem 1rem;
+        border-radius: 0.25rem;
+        display: block;
+        border: 1px solid var(--bs-secondary);
+        transition: all 0.2s;
+        margin-bottom: 0.5rem;
+    }
+    .option-label:hover {
+        background-color: rgba(13, 202, 240, 0.1);
+        border-color: var(--bs-info);
+    }
+    .option-input:checked + .option-label {
+        background-color: rgba(13, 202, 240, 0.2);
+        border-color: var(--bs-info);
+    }
+    .option-input {
+        position: absolute;
+        opacity: 0;
+    }
+    .quiz-timer-container {
+        position: sticky;
+        top: 70px;
+        z-index: 100;
+    }
+    .quiz-timer-card {
+        background-color: rgba(33, 37, 41, 0.95);
+        border: 1px solid var(--bs-warning);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Quiz Timer -->
+            <div class="quiz-timer-container mb-4">
+                <div class="card quiz-timer-card shadow">
+                    <div class="card-body py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">{{ quiz.title }}</h5>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-clock me-2 text-warning"></i>
+                                <span id="quizTimer" class="fw-bold text-warning" data-duration="{{ duration_minutes }}">
+                                    {{ duration_minutes }}:00
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Form -->
+            <form id="quizForm" method="POST" action="{{ url_for('user.submit_quiz') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="quiz_id" value="{{ quiz.id }}">
+                <input type="hidden" name="time_taken" id="time_taken" value="0">
+                
+                <!-- Quiz Questions -->
+                {% for question in questions %}
+                <div class="question-container" data-question-id="{{ question.id }}">
+                    <h5 class="mb-3">
+                        <span class="badge bg-secondary me-2">{{ loop.index }}</span>
+                        {{ question.question_statement }}
+                    </h5>
+                    
+                    <div class="options-container">
+                        <div class="option-group mb-2">
+                            <input type="radio" name="question_{{ question.id }}" id="option1_{{ question.id }}" value="1" class="option-input">
+                            <label for="option1_{{ question.id }}" class="option-label">
+                                <span class="option-letter fw-bold me-2">A.</span>
+                                {{ question.option1 }}
+                            </label>
+                        </div>
+                        
+                        <div class="option-group mb-2">
+                            <input type="radio" name="question_{{ question.id }}" id="option2_{{ question.id }}" value="2" class="option-input">
+                            <label for="option2_{{ question.id }}" class="option-label">
+                                <span class="option-letter fw-bold me-2">B.</span>
+                                {{ question.option2 }}
+                            </label>
+                        </div>
+                        
+                        <div class="option-group mb-2">
+                            <input type="radio" name="question_{{ question.id }}" id="option3_{{ question.id }}" value="3" class="option-input">
+                            <label for="option3_{{ question.id }}" class="option-label">
+                                <span class="option-letter fw-bold me-2">C.</span>
+                                {{ question.option3 }}
+                            </label>
+                        </div>
+                        
+                        <div class="option-group mb-2">
+                            <input type="radio" name="question_{{ question.id }}" id="option4_{{ question.id }}" value="4" class="option-input">
+                            <label for="option4_{{ question.id }}" class="option-label">
+                                <span class="option-letter fw-bold me-2">D.</span>
+                                {{ question.option4 }}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <div class="d-flex justify-content-between mt-4 mb-5">
+                    <a href="{{ url_for('user.quiz_info', quiz_id=quiz.id) }}" class="btn btn-outline-secondary" onclick="return confirm('Are you sure you want to leave? Your progress will be lost.')">
+                        <i class="fas fa-arrow-left me-1"></i> Back
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-1"></i> Submit Quiz
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const timerElement = document.getElementById('quizTimer');
+        const quizForm = document.getElementById('quizForm');
+        const timeInput = document.getElementById('time_taken');
+        
+        if (timerElement && quizForm) {
+            const duration = parseInt(timerElement.getAttribute('data-duration'), 10) || 60;
+            let timeRemaining = duration * 60; // Convert to seconds
+            let timeTaken = 0;
+            
+            // Update timer every second
+            const timerInterval = setInterval(function() {
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    alert('Time is up! Submitting your quiz...');
+                    submitQuiz();
+                    return;
+                }
+                
+                timeRemaining--;
+                timeTaken++;
+                
+                // Update timer display
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                
+                // Update warning class based on time remaining
+                if (timeRemaining < 60) { // Less than 1 minute
+                    timerElement.classList.add('text-danger');
+                    timerElement.classList.remove('text-warning');
+                } else if (timeRemaining < 300) { // Less than 5 minutes
+                    timerElement.classList.add('text-warning');
+                }
+                
+                // Update hidden time taken input
+                if (timeInput) {
+                    timeInput.value = timeTaken;
+                }
+            }, 1000);
+            
+            // Function to submit the quiz
+            function submitQuiz() {
+                if (timeInput) {
+                    timeInput.value = timeTaken;
+                }
+                quizForm.submit();
+            }
+            
+            // Handle form submission
+            quizForm.addEventListener('submit', function(e) {
+                // Check if at least one option is selected for each question
+                const questions = document.querySelectorAll('.question-container');
+                let allAnswered = true;
+                
+                questions.forEach(question => {
+                    const questionId = question.getAttribute('data-question-id');
+                    const options = document.querySelectorAll(`input[name="question_${questionId}"]:checked`);
+                    
+                    if (options.length === 0) {
+                        question.classList.add('border-danger');
+                        allAnswered = false;
+                    } else {
+                        question.classList.remove('border-danger');
+                    }
+                });
+                
+                if (!allAnswered) {
+                    e.preventDefault();
+                    alert('Please answer all questions before submitting.');
+                    window.scrollTo(0, 0);
+                } else {
+                    clearInterval(timerInterval);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

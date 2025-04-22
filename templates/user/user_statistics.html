@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz History - Quiz Master{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+            <div class="position-sticky pt-3">
+                <h6 class="sidebar-heading px-3 mt-2 mb-1 text-muted">
+                    <i class="fas fa-user-circle me-2"></i>User Dashboard
+                </h6>
+                <ul class="nav flex-column mb-2">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('user.dashboard') }}">
+                            <i class="fas fa-home me-2"></i>
+                            Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('user.subjects') }}">
+                            <i class="fas fa-book me-2"></i>
+                            Subjects
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('user.history') }}">
+                            <i class="fas fa-history me-2"></i>
+                            History
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.profile') }}">
+                            <i class="fas fa-user-cog me-2"></i>
+                            Profile
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Quiz Attempt History</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{{ url_for('user.export_history_csv') }}" class="btn btn-primary" id="exportHistoryBtn">
+                        <i class="fas fa-file-export me-1"></i> Export as CSV
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Performance Charts -->
+            <div class="row mb-4">
+                <div class="col-md-8 mb-3">
+                    <div class="card bg-dark border-secondary shadow h-100">
+                        <div class="card-header bg-dark border-secondary">
+                            <h5 class="mb-0">Performance Over Time</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="performanceChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card bg-dark border-secondary shadow h-100">
+                        <div class="card-header bg-dark border-secondary">
+                            <h5 class="mb-0">Subject Performance</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="subjectPerformanceChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- History by Subject -->
+            {% if attempts_by_subject %}
+                {% for subject_id, data in attempts_by_subject.items() %}
+                    <div class="card bg-dark border-secondary shadow-sm mb-4">
+                        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">{{ data.subject.name }}</h5>
+                            <span class="badge bg-info">{{ data.attempts|length }} attempts</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-dark table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Quiz</th>
+                                            <th>Chapter</th>
+                                            <th>Date</th>
+                                            <th>Score</th>
+                                            <th>Correct</th>
+                                            <th>Time Taken</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for score, quiz, chapter in data.attempts %}
+                                            <tr>
+                                                <td>{{ quiz.title }}</td>
+                                                <td>{{ chapter.name }}</td>
+                                                <td>{{ score.time_stamp_of_attempt.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                <td>
+                                                    {% set total_marks = score.total_scored + (score.total_questions - score.correct_answers) %}
+                                                    {% set percentage = (score.total_scored / total_marks * 100)|round(2) %}
+                                                    <span class="badge {% if percentage >= 80 %}bg-success{% elif percentage >= 60 %}bg-info{% elif percentage >= 40 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                        {{ "%.2f"|format(percentage) }}%
+                                                    </span>
+                                                </td>
+                                                <td>{{ score.correct_answers }}/{{ score.total_questions }}</td>
+                                                <td>
+                                                    {% set minutes = (score.time_taken // 60) %}
+                                                    {% set seconds = (score.time_taken % 60) %}
+                                                    {{ minutes }}m {{ seconds }}s
+                                                </td>
+                                                <td>
+                                                    <a href="{{ url_for('user.result', score_id=score.id) }}" class="btn btn-sm btn-outline-info">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-history fa-4x text-muted"></i>
+                    </div>
+                    <h5>No quiz attempts yet</h5>
+                    <p class="text-muted">Take quizzes to build up your history and track your progress.</p>
+                    <a href="{{ url_for('user.subjects') }}" class="btn btn-primary mt-2">
+                        <i class="fas fa-tasks me-1"></i> Take a Quiz
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/user.js"></script>
+<script src="/static/js/chart-utils.js"></script>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Master - Home{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="welcome-container">
+        <h1 class="welcome-heading">Welcome to Quiz Master</h1>
+        <p class="welcome-subheading">Test your knowledge and challenge yourself!</p>
+        
+        {% if not current_user.is_authenticated %}
+        <div class="d-grid gap-2 d-md-flex justify-content-center">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-success btn-lg px-4 me-md-2">Login</a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-4">Register</a>
+        </div>
+        {% else %}
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-warning btn-lg px-4">Go to Admin Dashboard</a>
+            {% else %}
+            <a href="{{ url_for('user.dashboard') }}" class="btn btn-primary btn-lg px-4">Go to My Dashboard</a>
+            {% endif %}
+        {% endif %}
+    </div>
+    
+    <div class="row mb-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-book fa-3x neon-text"></i>
+                    </div>
+                    <h3 class="card-title h5 neon-text">Multiple Subjects</h3>
+                    <p class="card-text text-light">Explore a wide range of subjects and chapters to test your knowledge in various domains.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-clock fa-3x neon-text"></i>
+                    </div>
+                    <h3 class="card-title h5 neon-text">Timed Quizzes</h3>
+                    <p class="card-text text-light">Challenge yourself with timed quizzes that simulate real exam conditions to improve your speed and accuracy.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-chart-line fa-3x neon-text"></i>
+                    </div>
+                    <h3 class="card-title h5 neon-text">Performance Analytics</h3>
+                    <p class="card-text text-light">Track your progress with detailed analytics and visualizations to identify your strengths and areas for improvement.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row py-4 mb-5">
+        <div class="col-12 text-center mb-4">
+            <h2 class="neon-text">How It Works</h2>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-user-plus fa-3x neon-text"></i>
+                    </div>
+                    <h3 class="card-title h5 neon-text">1. Create an Account</h3>
+                    <p class="card-text text-light">Register with your email and create a profile to track your progress.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-book-open fa-3x neon-text"></i>
+                    </div>
+                    <h3 class="card-title h5 neon-text">2. Choose a Subject</h3>
+                    <p class="card-text text-light">Browse available subjects and chapters to find quizzes that interest you.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-edit fa-3x neon-text"></i>
+                    </div>
+                    <h3 class="card-title h5 neon-text">3. Take Quizzes</h3>
+                    <p class="card-text text-light">Attempt quizzes, test your knowledge, and review your results to improve.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
