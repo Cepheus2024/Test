@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Quiz Master{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+            <div class="position-sticky pt-3">
+                <h6 class="sidebar-heading px-3 mt-2 mb-1 text-muted">
+                    <i class="fas fa-user-circle me-2"></i>User Dashboard
+                </h6>
+                <ul class="nav flex-column mb-2">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('user.dashboard') }}">
+                            <i class="fas fa-home me-2"></i>
+                            Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('user.subjects') }}">
+                            <i class="fas fa-book me-2"></i>
+                            Subjects
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('user.history') }}">
+                            <i class="fas fa-history me-2"></i>
+                            History
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.profile') }}">
+                            <i class="fas fa-user-cog me-2"></i>
+                            Profile
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Welcome, {{ current_user.fullname }}</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{{ url_for('user.subjects') }}" class="btn btn-primary">
+                        <i class="fas fa-tasks me-1"></i> Take a Quiz
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="card bg-dark border-primary h-100 shadow">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-muted">Quiz Attempts</h6>
+                                    <h2 class="mb-0">{{ total_attempts }}</h2>
+                                </div>
+                                <div class="p-3 bg-primary rounded">
+                                    <i class="fas fa-clipboard-check text-white"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card bg-dark border-success h-100 shadow">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-muted">Average Score</h6>
+                                    <h2 class="mb-0">{{ "%.2f"|format(avg_score) }}%</h2>
+                                </div>
+                                <div class="p-3 bg-success rounded">
+                                    <i class="fas fa-chart-line text-white"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card bg-dark border-warning h-100 shadow">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title text-muted">Available Subjects</h6>
+                                    <h2 class="mb-0">{{ subjects|length }}</h2>
+                                </div>
+                                <div class="p-3 bg-warning rounded">
+                                    <i class="fas fa-book text-white"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Performance Chart -->
+                <div class="col-md-7 mb-4">
+                    <div class="card bg-dark border-secondary shadow h-100">
+                        <div class="card-header bg-dark border-secondary">
+                            <h5 class="mb-0">Performance Over Time</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if total_attempts > 0 %}
+                                <canvas id="performanceChart" height="250"></canvas>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <div class="mb-3">
+                                        <i class="fas fa-chart-line fa-4x text-muted"></i>
+                                    </div>
+                                    <h5>No performance data yet</h5>
+                                    <p class="text-muted">Take quizzes to see your performance over time.</p>
+                                    <a href="{{ url_for('user.subjects') }}" class="btn btn-primary mt-2">
+                                        <i class="fas fa-tasks me-1"></i> Take a Quiz
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Quiz Attempts -->
+                <div class="col-md-5 mb-4">
+                    <div class="card bg-dark border-secondary shadow h-100">
+                        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Recent Attempts</h5>
+                            <a href="{{ url_for('user.history') }}" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-history me-1"></i> View All
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_attempts %}
+                                <ul class="list-group list-group-flush">
+                                    {% for score, quiz, chapter, subject in recent_attempts %}
+                                        <li class="list-group-item bg-dark border-secondary">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-0">{{ quiz.title }}</h6>
+                                                    <small class="text-muted">{{ subject.name }} - {{ chapter.name }}</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="badge bg-info">{{ "%.2f"|format(score.total_scored) }}%</span>
+                                                    <small class="d-block text-muted">{{ score.time_stamp_of_attempt.strftime('%Y-%m-%d') }}</small>
+                                                </div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <a href="{{ url_for('user.result', score_id=score.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    View Result
+                                                </a>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <p class="text-muted">No quiz attempts yet.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Upcoming Quizzes -->
+            <div class="card bg-dark border-secondary shadow-sm mb-4">
+                <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Upcoming Quizzes</h5>
+                    <a href="{{ url_for('user.subjects') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-book me-1"></i> Browse All Subjects
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_quizzes %}
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Quiz</th>
+                                        <th>Subject</th>
+                                        <th>Chapter</th>
+                                        <th>Date</th>
+                                        <th>Duration</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for quiz, chapter, subject in upcoming_quizzes %}
+                                        <tr>
+                                            <td>{{ quiz.title }}</td>
+                                            <td>{{ subject.name }}</td>
+                                            <td>{{ chapter.name }}</td>
+                                            <td>{{ quiz.date_of_quiz.strftime('%Y-%m-%d') }}</td>
+                                            <td>{{ quiz.time_duration }} minutes</td>
+                                            <td>
+                                                <a href="{{ url_for('user.quiz_info', quiz_id=quiz.id) }}" class="btn btn-sm btn-outline-info">
+                                                    <i class="fas fa-info-circle"></i> Details
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted">No upcoming quizzes available.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/user.js"></script>
+<script src="/static/js/chart-utils.js"></script>
+{% endblock %}

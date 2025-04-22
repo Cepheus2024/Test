@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Information - {{ quiz.title }} - Quiz Master{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('user.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('user.subjects') }}">Subjects</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('user.chapters', subject_id=subject.id) }}">{{ subject.name }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('user.quizzes', chapter_id=chapter.id) }}">{{ chapter.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ quiz.title }}</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card bg-dark border-secondary shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="card-title mb-3">{{ quiz.title }}</h2>
+                    
+                    <div class="mb-4">
+                        <p class="card-text">{{ quiz.description }}</p>
+                        {% if quiz.remarks %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i> {{ quiz.remarks }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Quiz Details</h5>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                    <span class="text-muted">Subject:</span>
+                                    <span>{{ subject.name }}</span>
+                                </li>
+                                <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                    <span class="text-muted">Chapter:</span>
+                                    <span>{{ chapter.name }}</span>
+                                </li>
+                                <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                    <span class="text-muted">Date:</span>
+                                    <span>{{ quiz.date_of_quiz.strftime('%Y-%m-%d') }}</span>
+                                </li>
+                                <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                    <span class="text-muted">Duration:</span>
+                                    <span>{{ quiz.time_duration }} minutes</span>
+                                </li>
+                                <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                    <span class="text-muted">Type:</span>
+                                    <span>
+                                        {% if quiz.is_paid %}
+                                            <span class="badge bg-warning">Paid (${{ "%.2f"|format(quiz.price) }})</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Free</span>
+                                        {% endif %}
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Quiz Content</h5>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                    <span class="text-muted">Total Questions:</span>
+                                    <span>{{ total_questions }}</span>
+                                </li>
+                                <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                    <span class="text-muted">Total Marks:</span>
+                                    <span>{{ total_marks }}</span>
+                                </li>
+                                <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                    <span class="text-muted">Question Type:</span>
+                                    <span>Multiple Choice</span>
+                                </li>
+                                <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                    <span class="text-muted">Number of Options:</span>
+                                    <span>4 options per question</span>
+                                </li>
+                                <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                    <span class="text-muted">Auto Submit:</span>
+                                    <span>Yes, when time ends</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('user.quizzes', chapter_id=chapter.id) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Back to Quizzes
+                        </a>
+                        
+                        {% if previous_attempt %}
+                            <div class="d-flex gap-2">
+                                <div class="alert alert-info py-2 px-3 mb-0 d-flex align-items-center">
+                                    <i class="fas fa-info-circle me-2"></i> You've already attempted this quiz
+                                </div>
+                                <a href="{{ url_for('user.result', score_id=previous_attempt.id) }}" class="btn btn-outline-info">
+                                    <i class="fas fa-eye me-1"></i> View Result
+                                </a>
+                            </div>
+                        {% elif quiz.date_of_quiz > now().date() %}
+                            <div class="alert alert-warning py-2 px-3 mb-0 d-flex align-items-center">
+                                <i class="fas fa-clock me-2"></i> This quiz will be available on {{ quiz.date_of_quiz.strftime('%Y-%m-%d') }}
+                            </div>
+                        {% elif total_questions == 0 %}
+                            <div class="alert alert-warning py-2 px-3 mb-0 d-flex align-items-center">
+                                <i class="fas fa-exclamation-triangle me-2"></i> This quiz has no questions yet
+                            </div>
+                        {% else %}
+                            {% if quiz.is_paid and not paid %}
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                                    <i class="fas fa-credit-card me-1"></i> Pay & Attempt Quiz
+                                </button>
+                            {% else %}
+                                <a href="{{ url_for('user.attempt_quiz', quiz_id=quiz.id) }}" class="btn btn-primary">
+                                    <i class="fas fa-play-circle me-1"></i> Attempt Quiz
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card bg-dark border-secondary shadow-sm mb-4">
+                <div class="card-header bg-dark border-secondary">
+                    <h5 class="mb-0">Instructions</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item bg-dark border-secondary">
+                            <i class="fas fa-info-circle text-info me-2"></i> Read each question carefully
+                        </li>
+                        <li class="list-group-item bg-dark border-secondary">
+                            <i class="fas fa-check-square text-success me-2"></i> Select one answer for each question
+                        </li>
+                        <li class="list-group-item bg-dark border-secondary">
+                            <i class="fas fa-clock text-warning me-2"></i> Keep an eye on the timer
+                        </li>
+                        <li class="list-group-item bg-dark border-secondary">
+                            <i class="fas fa-save text-primary me-2"></i> Submit before time runs out
+                        </li>
+                        <li class="list-group-item bg-dark border-secondary">
+                            <i class="fas fa-exclamation-triangle text-danger me-2"></i> Quiz auto-submits when time ends
+                        </li>
+                    </ul>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Important:</strong> Once started, you cannot pause the quiz or navigate away from the page.
+                    </div>
+                </div>
+            </div>
+            
+            {% if previous_attempt %}
+                <div class="card bg-dark border-success shadow-sm mb-4">
+                    <div class="card-header bg-dark border-success">
+                        <h5 class="mb-0">Your Previous Attempt</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                <span class="text-muted">Date:</span>
+                                <span>{{ previous_attempt.time_stamp_of_attempt.strftime('%Y-%m-%d %H:%M') }}</span>
+                            </li>
+                            <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                <span class="text-muted">Score:</span>
+                                <span>{{ previous_attempt.total_scored }}</span>
+                            </li>
+                            <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                <span class="text-muted">Correct Answers:</span>
+                                <span>{{ previous_attempt.correct_answers }}/{{ previous_attempt.total_questions }}</span>
+                            </li>
+                            <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                <span class="text-muted">Time Taken:</span>
+                                <span>
+                                    {% set minutes = (previous_attempt.time_taken // 60) %}
+                                    {% set seconds = (previous_attempt.time_taken % 60) %}
+                                    {{ minutes }}m {{ seconds }}s
+                                </span>
+                            </li>
+                        </ul>
+                        
+                        <div class="d-grid mt-3">
+                            <a href="{{ url_for('user.result', score_id=previous_attempt.id) }}" class="btn btn-outline-success">
+                                <i class="fas fa-eye me-1"></i> View Detailed Results
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal (for paid quizzes) -->
+{% if quiz.is_paid and not paid %}
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark">
+                <div class="modal-header">
+                    <h5 class="modal-title">Payment for {{ quiz.title }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i> This is a paid quiz. Please complete the payment to unlock it.
+                    </div>
+                    
+                    <div class="card bg-dark border-warning mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">Quiz Details</h5>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                    <span>Price:</span>
+                                    <span><strong>${{ "%.2f"|format(quiz.price) }}</strong></span>
+                                </li>
+                                <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                    <span>Questions:</span>
+                                    <span>{{ total_questions }}</span>
+                                </li>
+                                <li class="list-group-item bg-dark border-secondary d-flex justify-content-between">
+                                    <span>Duration:</span>
+                                    <span>{{ quiz.time_duration }} minutes</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <form id="paymentForm">
+                        <div class="mb-3">
+                            <label for="cardNumber" class="form-label">Card Number</label>
+                            <input type="text" class="form-control" id="cardNumber" placeholder="1234 5678 9012 3456" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="expiryDate" class="form-label">Expiry Date</label>
+                                <input type="text" class="form-control" id="expiryDate" placeholder="MM/YY" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="cvv" class="form-label">CVV</label>
+                                <input type="text" class="form-control" id="cvv" placeholder="123" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="cardName" class="form-label">Name on Card</label>
+                            <input type="text" class="form-control" id="cardName" placeholder="John Doe" required>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <small>
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                This is a dummy payment form for demonstration purposes only. No actual payment will be processed.
+                            </small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <a href="{{ url_for('user.attempt_quiz', quiz_id=quiz.id) }}" class="btn btn-primary">
+                        <i class="fas fa-credit-card me-1"></i> Pay ${{ "%.2f"|format(quiz.price) }} & Start Quiz
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

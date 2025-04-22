@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Quizzes - {{ chapter.name }} - Quiz Master{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+            <div class="position-sticky pt-3">
+                <h6 class="sidebar-heading px-3 mt-2 mb-1 text-muted">
+                    <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+                </h6>
+                <ul class="nav flex-column mb-2">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                            <i class="fas fa-home me-2"></i>
+                            Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin.subjects') }}">
+                            <i class="fas fa-book me-2"></i>
+                            Subjects
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.users') }}">
+                            <i class="fas fa-users me-2"></i>
+                            Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.reports') }}">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Reports
+                        </a>
+                    </li>
+                </ul>
+                
+                <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+                    <i class="fas fa-tools me-2"></i>Tools
+                </h6>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.export_users_csv') }}">
+                            <i class="fas fa-file-csv me-2"></i>
+                            Export Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.export_quizzes_csv') }}">
+                            <i class="fas fa-file-export me-2"></i>
+                            Export Quizzes
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('admin.subjects') }}">Subjects</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('admin.chapters', subject_id=chapter.subject_id) }}">{{ chapter.subject.name }}</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">{{ chapter.name }}</li>
+                        </ol>
+                    </nav>
+                    <h1 class="h2">Quizzes in {{ chapter.name }}</h1>
+                    <p class="text-muted">{{ chapter.description }}</p>
+                </div>
+                <div class="d-flex">
+                    <form id="adminSearchForm" class="input-group me-2" method="POST" action="{{ url_for('admin.search') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="text" class="form-control" placeholder="Search quizzes..." id="adminSearch" name="q">
+                        <button class="btn btn-outline-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addQuizModal">
+                        <i class="fas fa-plus me-1"></i> Add Quiz
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Quizzes Card -->
+            <div class="card bg-dark text-white border-secondary shadow-sm mb-4">
+                <div class="card-header bg-secondary border-secondary">
+                    <h5 class="mb-0">Quizzes</h5>
+                </div>
+                <div class="card-body">
+                    {% if quizzes %}
+                        <ul class="list-group">
+                            {% for quiz in quizzes %}
+                                <li class="list-group-item bg-dark text-white border-secondary">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-0">{{ quiz.title }}</h6>
+                                            <small class="text-muted">{{ quiz.date_of_quiz.strftime('%Y-%m-%d') }}</small>
+                                        </div>
+                                        <div>
+                                            <a href="{{ url_for('admin.edit_quiz', id=quiz.id) }}" class="btn btn-sm btn-outline-warning">Edit</a>
+                                            <a href="{{ url_for('admin.delete_quiz', id=quiz.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this quiz?')">Delete</a>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-center text-muted">No quizzes available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Quiz Modal -->
+<div class="modal fade" id="addQuizModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Quiz</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('admin.add_quiz', chapter_id=chapter.id) }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="title" class="form-label">Quiz Title</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="date_of_quiz" class="form-label">Quiz Date</label>
+                            <input type="date" class="form-control" id="date_of_quiz" name="date_of_quiz" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="time_duration" class="form-label">Duration (minutes)</label>
+                            <input type="number" class="form-control" id="time_duration" name="time_duration" min="1" value="30" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="remarks" class="form-label">Remarks</label>
+                        <textarea class="form-control" id="remarks" name="remarks" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Quiz</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set minimum date to today
+        const dateInput = document.getElementById('date_of_quiz');
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute('min', today);
+        dateInput.value = today;
+        
+        // Delete quiz confirmation
+        const deleteButtons = document.querySelectorAll('.delete-quiz-btn');
+        
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to delete this quiz? This will delete all associated questions and attempts.')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

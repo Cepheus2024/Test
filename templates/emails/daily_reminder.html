@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Master Daily Reminder</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #343a40;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 0 0 5px 5px;
+            border: 1px solid #ddd;
+            border-top: none;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        h1, h2, h3 {
+            color: #0dcaf0;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #0d6efd;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .btn:hover {
+            background-color: #0b5ed7;
+        }
+        .quiz-list {
+            margin: 15px 0;
+        }
+        .quiz-item {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .quiz-date {
+            color: #6c757d;
+            font-size: 12px;
+        }
+        .subject {
+            color: #0d6efd;
+            font-weight: bold;
+        }
+        .chapter {
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Quiz Master</h1>
+        <p>Your daily reminder for quiz preparation</p>
+    </div>
+    
+    <div class="content">
+        <h2>Hello, {{ user.fullname }}!</h2>
+        
+        {% if reason == "inactivity" %}
+            <p>We noticed you haven't visited Quiz Master recently. We miss you!</p>
+            <p>Don't miss out on the opportunity to improve your knowledge and test your skills.</p>
+        {% endif %}
+        
+        {% if new_quizzes %}
+            <h3>New Quizzes Available!</h3>
+            <p>We've added some new quizzes that might interest you:</p>
+            
+            <div class="quiz-list">
+                {% for quiz in new_quizzes %}
+                    <div class="quiz-item">
+                        <h4>{{ quiz.title }}</h4>
+                        <p><span class="subject">{{ quiz.chapter.subject.name }}</span> - <span class="chapter">{{ quiz.chapter.name }}</span></p>
+                        <p>{{ quiz.description }}</p>
+                        <p class="quiz-date">Available on: {{ quiz.date_of_quiz.strftime('%Y-%m-%d') }} | Duration: {{ quiz.time_duration }} minutes</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <p>Regular practice is the key to success. Take some time to attempt quizzes and improve your knowledge!</p>
+        
+        <a href="http://localhost:5000" class="btn">Visit Quiz Master</a>
+    </div>
+    
+    <div class="footer">
+        <p>This is an automated message. Please do not reply to this email.</p>
+        <p>&copy; 2023 Quiz Master. All rights reserved.</p>
+        <p>If you wish to unsubscribe from these notifications, please visit your profile settings.</p>
+    </div>
+</body>
+</html>

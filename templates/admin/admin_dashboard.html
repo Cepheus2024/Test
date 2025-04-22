@@ -1,0 +1,463 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Quiz Master{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+            <div class="position-sticky pt-3">
+                <h6 class="sidebar-heading px-3 mt-2 mb-1 text-muted">
+                    <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+                </h6>
+                <ul class="nav flex-column mb-2">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin.dashboard') }}">
+                            <i class="fas fa-home me-2"></i>
+                            Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.subjects') }}">
+                            <i class="fas fa-book me-2"></i>
+                            Subjects
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.users') }}">
+                            <i class="fas fa-users me-2"></i>
+                            Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.reports') }}">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Reports
+                        </a>
+                    </li>
+                </ul>
+                
+                <h6 class="sidebar-heading px-3 mt-4 mb-1 text-muted">
+                    <i class="fas fa-tools me-2"></i>Tools
+                </h6>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.export_users_csv') }}">
+                            <i class="fas fa-file-csv me-2"></i>
+                            Export Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.export_quizzes_csv') }}">
+                            <i class="fas fa-file-export me-2"></i>
+                            Export Quizzes
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Admin Dashboard</h1>
+            </div>
+            
+            <!-- Stats cards -->
+            <div class="row mb-4">
+                <div class="col-xl-2 col-md-4 mb-3">
+                    <div class="card bg-dark text-white border-secondary h-100 shadow">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0 bg-primary rounded-3 p-3 me-3">
+                                    <i class="fas fa-book fa-fw text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="small text-muted">Subjects</div>
+                                    <div class="fw-bold h3">{{ stats.subjects }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-md-4 mb-3">
+                    <div class="card bg-dark text-white border-secondary h-100 shadow">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0 bg-success rounded-3 p-3 me-3">
+                                    <i class="fas fa-folder-open fa-fw text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="small text-muted">Chapters</div>
+                                    <div class="fw-bold h3">{{ stats.chapters }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-md-4 mb-3">
+                    <div class="card bg-dark text-white border-secondary h-100 shadow">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0 bg-info rounded-3 p-3 me-3">
+                                    <i class="fas fa-tasks fa-fw text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="small text-muted">Quizzes</div>
+                                    <div class="fw-bold h3">{{ stats.quizzes }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-md-4 mb-3">
+                    <div class="card bg-dark text-white border-secondary h-100 shadow">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0 bg-warning rounded-3 p-3 me-3">
+                                    <i class="fas fa-question fa-fw text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="small text-muted">Questions</div>
+                                    <div class="fw-bold h3">{{ stats.questions }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-md-4 mb-3">
+                    <div class="card bg-dark text-white border-secondary h-100 shadow">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0 bg-danger rounded-3 p-3 me-3">
+                                    <i class="fas fa-users fa-fw text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="small text-muted">Users</div>
+                                    <div class="fw-bold h3">{{ stats.users }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-2 col-md-4 mb-3">
+                    <div class="card bg-dark text-white border-secondary h-100 shadow">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0 bg-secondary rounded-3 p-3 me-3">
+                                    <i class="fas fa-clipboard-check fa-fw text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="small text-muted">Attempts</div>
+                                    <div class="fw-bold h3">{{ stats.quiz_attempts }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Recent Quiz Attempts -->
+                <div class="col-md-8 mb-4">
+                    <div class="card bg-dark text-white border-secondary shadow">
+                        <div class="card-header bg-secondary border-secondary d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Recent Quiz Attempts</h5>
+                            <a href="{{ url_for('admin.reports') }}" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-chart-bar me-1"></i> View All
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_attempts %}
+                                <div class="table-responsive">
+                                    <table class="table table-dark table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>User</th>
+                                                <th>Quiz</th>
+                                                <th>Score</th>
+                                                <th>Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for score, user, quiz in recent_attempts %}
+                                                <tr>
+                                                    <td>{{ user.username }}</td>
+                                                    <td>{{ quiz.title }}</td>
+                                                    <td>{{ score.total_scored }}</td>
+                                                    <td>{{ score.time_stamp_of_attempt.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-center text-muted">No quiz attempts yet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Top Performing Users -->
+                <div class="col-md-4 mb-4">
+                    <div class="card bg-dark text-white border-secondary shadow">
+                        <div class="card-header bg-secondary border-secondary">
+                            <h5 class="mb-0">Top Performing Users</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if top_users %}
+                                <ul class="list-group list-group-flush">
+                                    {% for user, avg_score, quiz_count in top_users %}
+                                        <li class="list-group-item bg-dark border-secondary">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-0">{{ user.fullname }}</h6>
+                                                    <small class="text-muted">{{ user.username }}</small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="badge bg-success">{{ "%.2f"|format(avg_score) }}%</span>
+                                                    <small class="d-block text-muted">{{ quiz_count }} quizzes</small>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p class="text-center text-muted">No user performance data yet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Activity Chart -->
+                <div class="col-md-12 mb-4">
+                    <div class="card bg-dark text-white border-secondary shadow-sm mb-4">
+                        <div class="card-header bg-secondary border-secondary">
+                            <h5 class="mb-0">Quiz Attempt Activity</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if graph_data %}
+                                <canvas id="activityChart" height="200"></canvas>
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const ctx = document.getElementById('activityChart').getContext('2d');
+                                        const labels = {{ graph_data | map(attribute='month') | list | tojson }};
+                                        const attemptData = {{ graph_data | map(attribute='attempt_count') | list | tojson }};
+                                        
+                                        new Chart(ctx, {
+                                            type: 'line',
+                                            data: {
+                                                labels: labels,
+                                                datasets: [{
+                                                    label: 'Quiz Attempts',
+                                                    data: attemptData,
+                                                    borderColor: '#0dcaf0',
+                                                    backgroundColor: 'rgba(13, 202, 240, 0.1)',
+                                                    borderWidth: 2,
+                                                    tension: 0.3,
+                                                    fill: true
+                                                }]
+                                            },
+                                            options: {
+                                                responsive: true,
+                                                maintainAspectRatio: false,
+                                                plugins: {
+                                                    legend: {
+                                                        display: false
+                                                    }
+                                                },
+                                                scales: {
+                                                    y: {
+                                                        beginAtZero: true,
+                                                        grid: {
+                                                            color: 'rgba(255, 255, 255, 0.1)'
+                                                        }
+                                                    },
+                                                    x: {
+                                                        grid: {
+                                                            display: false
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        });
+                                    });
+                                </script>
+                            {% else %}
+                                <p class="text-center text-muted">No quiz attempts available to display.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Quiz Attempts Over Time -->
+                <div class="col-md-12 mb-4">
+                    <div class="card bg-dark text-white border-secondary shadow-sm mb-4">
+                        <div class="card-header bg-secondary border-secondary">
+                            <h5 class="mb-0">Quiz Attempts Over Time</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if graph_data %}
+                                <canvas id="quizAttemptsGraph"></canvas>
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const ctx = document.getElementById('quizAttemptsGraph').getContext('2d');
+                                        const labels = {{ graph_data | map(attribute='month') | list | tojson }};
+                                        const data = {{ graph_data | map(attribute='attempt_count') | list | tojson }};
+                                        
+                                        new Chart(ctx, {
+                                            type: 'line',
+                                            data: {
+                                                labels: labels,
+                                                datasets: [{
+                                                    label: 'Quiz Attempts',
+                                                    data: data,
+                                                    borderColor: '#0dcaf0',
+                                                    backgroundColor: 'rgba(13, 202, 240, 0.1)',
+                                                    borderWidth: 2,
+                                                    tension: 0.3,
+                                                    fill: true
+                                                }]
+                                            },
+                                            options: {
+                                                responsive: true,
+                                                maintainAspectRatio: false,
+                                                plugins: {
+                                                    legend: {
+                                                        display: false
+                                                    }
+                                                },
+                                                scales: {
+                                                    y: {
+                                                        beginAtZero: true,
+                                                        grid: {
+                                                            color: 'rgba(255, 255, 255, 0.1)'
+                                                        }
+                                                    },
+                                                    x: {
+                                                        grid: {
+                                                            display: false
+                                                        }
+                                                    }
+                                                }
+                                            });
+                                        });
+                                    });
+                                </script>
+                            {% else %}
+                                <p class="text-center text-muted">No quiz attempts available to display.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Admin search functionality
+        const searchInput = document.getElementById('adminSearch');
+        const searchButton = document.getElementById('searchButton');
+        
+        function performSearch() {
+            const query = searchInput.value.trim();
+            if (query) {
+                fetch(`/admin/search?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Show the search results in a modal
+                        const resultsHtml = `
+                            <div class="modal fade" id="searchResultsModal" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content bg-dark">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Search Results for "${query}"</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            ${data.users.length > 0 ? `
+                                                <h6 class="border-bottom pb-2 mb-3">Users</h6>
+                                                <ul class="list-group mb-4">
+                                                    ${data.users.map(user => `
+                                                        <li class="list-group-item bg-dark border-secondary d-flex justify-content-between align-items-center">
+                                                            <div>${user.name} <small class="text-muted">(${user.username})</small></div>
+                                                            <a href="#" class="btn btn-sm btn-outline-info">View</a>
+                                                        </li>
+                                                    `).join('')}
+                                                </ul>
+                                            ` : ''}
+                                            
+                                            ${data.subjects.length > 0 ? `
+                                                <h6 class="border-bottom pb-2 mb-3">Subjects</h6>
+                                                <ul class="list-group mb-4">
+                                                    ${data.subjects.map(subject => `
+                                                        <li class="list-group-item bg-dark border-secondary d-flex justify-content-between align-items-center">
+                                                            <div>${subject.name}</div>
+                                                            <a href="/admin/subjects" class="btn btn-sm btn-outline-info">View</a>
+                                                        </li>
+                                                    `).join('')}
+                                                </ul>
+                                            ` : ''}
+                                            
+                                            ${data.quizzes.length > 0 ? `
+                                                <h6 class="border-bottom pb-2 mb-3">Quizzes</h6>
+                                                <ul class="list-group mb-4">
+                                                    ${data.quizzes.map(quiz => `
+                                                        <li class="list-group-item bg-dark border-secondary d-flex justify-content-between align-items-center">
+                                                            <div>${quiz.title}</div>
+                                                            <a href="/admin/quizzes/edit/${quiz.id}" class="btn btn-sm btn-outline-info">View</a>
+                                                        </li>
+                                                    `).join('')}
+                                                </ul>
+                                            ` : ''}
+                                            
+                                            ${(!data.users.length && !data.subjects.length && !data.quizzes.length) ? 
+                                                '<p class="text-center text-muted">No results found</p>' : ''}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Add modal to DOM
+                        const modalContainer = document.createElement('div');
+                        modalContainer.innerHTML = resultsHtml;
+                        document.body.appendChild(modalContainer);
+                        
+                        // Show modal
+                        const modal = new bootstrap.Modal(document.getElementById('searchResultsModal'));
+                        modal.show();
+                        
+                        // Clean up when modal is hidden
+                        document.getElementById('searchResultsModal').addEventListener('hidden.bs.modal', function() {
+                            document.body.removeChild(modalContainer);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Search error:', error);
+                        alert('An error occurred while searching. Please try again.');
+                    });
+            }
+        }
+        
+        searchButton.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    });
+</script>
+{% endblock %}

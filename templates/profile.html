@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Quiz Master{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card bg-dark border-secondary shadow">
+                <div class="card-header bg-dark border-secondary">
+                    <h3 class="mb-0">Your Profile</h3>
+                </div>
+                <div class="card-body">
+                    <form id="profileForm" method="POST" action="{{ url_for('auth.profile') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-4 text-center">
+                                <div class="mb-3">
+                                    <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 120px; height: 120px;">
+                                        <i class="fas fa-user fa-4x text-white"></i>
+                                    </div>
+                                </div>
+                                <h5>{{ user.username }}</h5>
+                                <p class="text-muted">
+                                    {% if user.is_admin %}
+                                        <span class="badge bg-danger">Administrator</span>
+                                    {% else %}
+                                        <span class="badge bg-info">Student</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="username" value="{{ user.username }}" disabled>
+                                    <div class="form-text">Username cannot be changed</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="email" value="{{ user.email }}" disabled>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="fullname" class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" id="fullname" name="fullname" value="{{ user.fullname }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="qualification" class="form-label">Qualification</label>
+                                <input type="text" class="form-control" id="qualification" name="qualification" value="{{ user.qualification or '' }}">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="dob" class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" id="dob" name="dob" value="{{ user.dob.strftime('%Y-%m-%d') if user.dob else '' }}">
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Account Created</label>
+                                <input type="text" class="form-control" value="{{ user.created_at.strftime('%Y-%m-%d') }}" disabled>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Last Login</label>
+                                <input type="text" class="form-control" value="{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'Never' }}" disabled>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            {% if user.is_admin %}
+                                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('user.dashboard') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                                </a>
+                            {% endif %}
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Update Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordForm = document.getElementById('passwordForm');
+        const profileForm = document.getElementById('profileForm');
+        
+        if (profileForm) {
+            profileForm.addEventListener('submit', function(e) {
+                const fullname = document.getElementById('fullname').value.trim();
+                
+                if (!fullname) {
+                    e.preventDefault();
+                    alert('Full name is required');
+                }
+            });
+        }
+        
+        if (passwordForm) {
+            passwordForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const currentPassword = document.getElementById('currentPassword').value;
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                if (!currentPassword || !newPassword || !confirmPassword) {
+                    alert('All password fields are required');
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    alert('New passwords do not match');
+                    return;
+                }
+                
+                // This form is currently disabled as indicated in the template
+                alert('Password change functionality is disabled in this version.');
+            });
+        }
+    });
+</script>
+{% endblock %}

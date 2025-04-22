@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Master Monthly Report - {{ month_name }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #343a40;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 0 0 5px 5px;
+            border: 1px solid #ddd;
+            border-top: none;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        h1, h2, h3 {
+            color: #0dcaf0;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #0d6efd;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .btn:hover {
+            background-color: #0b5ed7;
+        }
+        .summary-card {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .summary-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0d6efd;
+            margin: 10px 0;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .progress-container {
+            background-color: #e9ecef;
+            height: 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background-color: #0d6efd;
+            height: 100%;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #e9ecef;
+            font-weight: bold;
+        }
+        .award {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        .success {
+            color: #198754;
+        }
+        .warning {
+            color: #ffc107;
+        }
+        .danger {
+            color: #dc3545;
+        }
+        .rank-badge {
+            display: inline-block;
+            background-color: #0d6efd;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Quiz Master</h1>
+        <p>Monthly Activity Report - {{ month_name }}</p>
+    </div>
+    
+    <div class="content">
+        <h2>Hello, {{ user.fullname }}!</h2>
+        
+        <p>Here's your monthly activity report for {{ month_name }}. This report summarizes your quiz performance and progress.</p>
+        
+        <div class="summary-card">
+            <h3>Monthly Overview</h3>
+            
+            <div class="summary-stats">
+                <div class="stat-box">
+                    <div class="stat-label">Total Attempts</div>
+                    <div class="stat-value">{{ total_attempts }}</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Average Score</div>
+                    <div class="stat-value">{{ "%.2f"|format(avg_score) }}%</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Ranking</div>
+                    <div class="stat-value">
+                        {% if user_rank %}
+                            {{ user_rank }}/{{ total_users }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            {% if avg_score >= 80 %}
+                <p><span class="award success">🏆</span> <strong>Excellent performance!</strong> You're scoring very well in your quizzes.</p>
+            {% elif avg_score >= 60 %}
+                <p><span class="award warning">🥈</span> <strong>Good performance!</strong> You're doing well, but there's room for improvement.</p>
+            {% else %}
+                <p><span class="award danger">📚</span> <strong>Keep practicing!</strong> Your scores show you might need more study time.</p>
+            {% endif %}
+        </div>
+        
+        {% if subject_performance %}
+            <div class="summary-card">
+                <h3>Subject Performance</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Attempts</th>
+                            <th>Average Score</th>
+                            <th>Performance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subject_id, data in subject_performance.items() %}
+                            <tr>
+                                <td>{{ data.name }}</td>
+                                <td>{{ data.attempts }}</td>
+                                <td>{{ "%.2f"|format(data.avg_score) }}%</td>
+                                <td>
+                                    <div class="progress-container">
+                                        <div class="progress-bar" style="width: {{ data.avg_score }}%;">
+                                            {{ "%.2f"|format(data.avg_score) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+        
+        {% if attempts %}
+            <div class="summary-card">
+                <h3>Recent Quiz Attempts</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Quiz</th>
+                            <th>Date</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for score, quiz, chapter, subject in attempts[:5] %}
+                            <tr>
+                                <td>{{ quiz.title }} <br><small>{{ subject.name }} - {{ chapter.name }}</small></td>
+                                <td>{{ score.time_stamp_of_attempt.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    {{ "%.2f"|format(score.total_scored) }}%
+                                    ({{ score.correct_answers }}/{{ score.total_questions }})
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                {% if attempts|length > 5 %}
+                    <p><small>Showing 5 out of {{ attempts|length }} attempts</small></p>
+                {% endif %}
+            </div>
+        {% endif %}
+        
+        <div class="summary-card">
+            <h3>Recommendations</h3>
+            
+            <ul>
+                {% if avg_score < 60 %}
+                    <li>Consider revisiting the subjects where your performance is lower.</li>
+                    <li>Try to take more practice quizzes to improve your scores.</li>
+                {% elif avg_score < 80 %}
+                    <li>You're doing well! Focus on the subjects where you scored less to further improve.</li>
+                {% else %}
+                    <li>Excellent performance! Continue practicing to maintain your high scores.</li>
+                {% endif %}
+                
+                {% if total_attempts < 5 %}
+                    <li>Try to take more quizzes to better track your progress and identify areas for improvement.</li>
+                {% endif %}
+                
+                {% if subject_performance and subject_performance|length < 3 %}
+                    <li>Explore more subjects to broaden your knowledge base.</li>
+                {% endif %}
+            </ul>
+        </div>
+        
+        <p>Continue your learning journey with us, and don't hesitate to explore new subjects and quizzes!</p>
+        
+        <a href="http://localhost:5000" class="btn">Visit Quiz Master</a>
+    </div>
+    
+    <div class="footer">
+        <p>This is an automated monthly report. Please do not reply to this email.</p>
+        <p>&copy; 2023 Quiz Master. All rights reserved.</p>
+        <p>If you wish to unsubscribe from these reports, please visit your profile settings.</p>
+    </div>
+</body>
+</html>
